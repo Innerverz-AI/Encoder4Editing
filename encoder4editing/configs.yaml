@@ -1,11 +1,11 @@
 # model 
-model_id: YourModel
+model_id: encoder4editing
 
 # multi-GPUs
-use_mGPU: True
+use_mGPU: False
 
 # wandb
-use_wandb: True
+use_wandb: False
 wandb_alert_thres: 1000
 
 # dataset
@@ -23,16 +23,14 @@ beta2: 0.999
 
 # weight of loss
 W_adv: 1
-W_id: 5
-W_recon: 10
-W_cycle: 0
-W_lpips: 0
-W_attr: 10
+W_id: 0.5
+W_recon: 1
+W_lpips: 1
 
 # hyperparameters
-same_prob: 0.2
 batch_per_gpu: 8
 max_step: 400000
+stylegan_size: 512
 
 # log cycle
 loss_cycle: 10
@@ -44,3 +42,4 @@ ckpt_path: None
 
 ## Pretrained models paths
 arcface_path: ptnn/arcface.pth
+stylegan_path: ptnn/ffhq_512.pkl

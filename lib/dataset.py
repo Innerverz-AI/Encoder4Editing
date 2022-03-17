@@ -7,10 +7,9 @@ import torchvision.transforms as transforms
 
 
 class FaceDatasetTrain(Dataset):
-    def __init__(self, dataset_root_list, isMaster, same_prob=0.2):
+    def __init__(self, dataset_root_list, isMaster):
         self.datasets = []
         self.N = []
-        self.same_prob = same_prob
  
         for dataset_root in dataset_root_list:
             imgpaths_in_root = glob.glob(f'{dataset_root}/*.*g')
@@ -38,17 +37,9 @@ class FaceDatasetTrain(Dataset):
             item -= self.N[idx]
             idx += 1
         image_path = self.datasets[idx][item]
-        
         Xs = Image.open(image_path).convert("RGB")
-
-        if random.random() > self.same_prob:
-            image_path = random.choice(self.datasets[random.randint(0, len(self.datasets)-1)])
-            Xt = Image.open(image_path).convert("RGB")
-            same_person = 0
-        else:
-            Xt = Xs.copy()
-            same_person = 1
-        return self.transforms(Xs), self.transforms(Xt), same_person
+        image_path = random.choice(self.datasets[random.randint(0, len(self.datasets)-1)])
+        return self.transforms(Xs)
 
     def __len__(self):
         return sum(self.N)
@@ -58,10 +49,6 @@ class FaceDatasetValid(Dataset):
     def __init__(self, valid_data_dir, isMaster):
         
         self.source_path_list = sorted(glob.glob(f"{valid_data_dir}/source/*.*g"))
-        self.target_path_list = sorted(glob.glob(f"{valid_data_dir}/target/*.*g"))
-
-        # take the smaller number if two dirs have different numbers of images
-        self.N = min(len(self.source_path_list), len(self.target_path_list))
         
         self.transforms = transforms.Compose([
             transforms.Resize((256,256)),
@@ -75,9 +62,7 @@ class FaceDatasetValid(Dataset):
     def __getitem__(self, idx):
         
         Xs = Image.open(self.source_path_list[idx]).convert("RGB")
-        Xt = Image.open(self.target_path_list[idx]).convert("RGB")
-
-        return self.transforms(Xs), self.transforms(Xt)
+        return self.transforms(Xs)
 
     def __len__(self):
-        return self.N
+        return len(self.source_path_list)

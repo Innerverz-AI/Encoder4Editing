@@ -25,18 +25,18 @@ class ModelInterface(metaclass=abc.ABCMeta):
         if source and target are identical.
         """
         try:
-            I_source, I_target, same_person = next(self.train_iterator)
+            I_source = next(self.train_iterator)
         except StopIteration:
             self.train_iterator = iter(self.train_dataloader)
-            I_source, I_target, same_person = next(self.train_iterator)
-        I_source, I_target, same_person = I_source.to(self.gpu), I_target.to(self.gpu), same_person.to(self.gpu)
-        return I_source, I_target, same_person
+            I_source = next(self.train_iterator)
+        I_source = I_source.to(self.gpu)
+        return I_source
 
     def set_dataset(self):
         """
         Initialize dataset using the dataset paths specified in the command line arguments.
         """
-        self.train_dataset = FaceDatasetTrain(self.args.train_dataset_root_list, self.args.isMaster, same_prob=self.args.same_prob)
+        self.train_dataset = FaceDatasetTrain(self.args.train_dataset_root_list, self.args.isMaster)
         if self.args.valid_dataset_root:
             self.valid_dataset = FaceDatasetValid(self.args.valid_dataset_root, self.args.isMaster)
 
@@ -57,8 +57,8 @@ class ModelInterface(metaclass=abc.ABCMeta):
         """
         if self.args.valid_dataset_root:
             self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=self.args.batch_per_gpu, num_workers=8, drop_last=True)
-            I_source, I_target = next(iter(self.valid_dataloader))
-            self.valid_source, self.valid_target = I_source.to(self.gpu), I_target.to(self.gpu)
+            I_source = next(iter(self.valid_dataloader))
+            self.valid_source = I_source.to(self.gpu)
 
     @abc.abstractmethod
     def initialize_models(self):

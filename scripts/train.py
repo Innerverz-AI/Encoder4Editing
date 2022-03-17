@@ -3,6 +3,7 @@ import sys
 sys.path.append("./")
 sys.path.append("../")
 sys.path.append("./submodel/")
+sys.path.append("./submodel/stylegan2")
 
 from lib.config import Config
 from lib.model_loader import CreateModel
@@ -28,7 +29,7 @@ def train(gpu, args):
     # Training loop
     global_step = step if step else 0
     while global_step < args.max_step:
-        result = model.train_step()
+        result = model.train_step(global_step)
 
         if args.isMaster:
             # Save and print loss
@@ -67,7 +68,7 @@ if __name__ == "__main__":
 
     # checkpoints and images will be saved in the ./train_result
     os.makedirs("./train_result", exist_ok=True)
-    args = Config.from_yaml("your_model/configs.yaml")
+    args = Config.from_yaml("encoder4editing/configs.yaml")
     args.gpu_num = torch.cuda.device_count()
     args.run_id = sys.argv[1]
 

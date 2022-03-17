@@ -58,6 +58,11 @@ def weight_init(m):
         nn.init.xavier_normal_(m.weight.data)
 
 
+def requires_grad(model, flag=True):
+    for p in model.parameters():
+        p.requires_grad = flag
+
+
 def update_net(optimizer, loss):
     optimizer.zero_grad()  
     loss.backward()   

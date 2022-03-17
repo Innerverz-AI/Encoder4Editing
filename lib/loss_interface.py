@@ -99,8 +99,8 @@ class Loss:
     @classmethod
     def get_softplus_loss(cls, Di, label):
         L_adv = 0
-        for di in Di:
-            L_adv += cls.softplus_loss(di[0], label)
+        for i in range(Di.size()[1]):
+            L_adv += cls.softplus_loss(Di[:, i, :], label)
         return L_adv
 
     def hinge_loss(logit, positive=True):
