@@ -81,8 +81,9 @@ class ModelInterface(metaclass=abc.ABCMeta):
         """
         Load pretrained parameters from checkpoint to the initialized models.
         """
-        checkpoint.load_checkpoint(self.args, self.G, self.opt_G)
-        checkpoint.load_checkpoint(self.args, self.D, self.opt_D)
+        step = checkpoint.load_checkpoint(self.args.isMaster, self.args.G_ckpt_path, self.G, self.opt_G)
+        step = checkpoint.load_checkpoint(self.args.isMaster, self.args.D_ckpt_path, self.D, self.opt_D)
+        return step
 
     def set_optimizers(self):
         self.opt_G = torch.optim.Adam(self.G.parameters(), lr=self.args.lr_G, betas=(self.args.beta1, self.args.beta2))

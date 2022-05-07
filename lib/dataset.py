@@ -10,7 +10,7 @@ class FaceDatasetTrain(Dataset):
     def __init__(self, dataset_root_list, isMaster):
         self.datasets = []
         self.N = []
- 
+
         for dataset_root in dataset_root_list:
             imgpaths_in_root = glob.glob(f'{dataset_root}/*.*g')
 

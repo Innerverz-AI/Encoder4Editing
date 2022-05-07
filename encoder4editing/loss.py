@@ -7,7 +7,7 @@ class Encoder4EditingLoss(LossInterface):
         
         # Adversarial loss
         if self.args.W_adv:
-            L_adv = Loss.get_softplus_loss(dict["d_adv"], True)
+            L_adv = Loss.softplus_loss(dict["d_adv"], True)
             L_G += self.args.W_adv * L_adv
             self.loss_dict["L_adv"] = round(L_adv.item(), 4)
         
@@ -33,8 +33,8 @@ class Encoder4EditingLoss(LossInterface):
         return L_G
 
     def get_loss_D(self, dict):
-        L_real = Loss.get_softplus_loss(dict["d_real"], True)
-        L_fake = Loss.get_softplus_loss(dict["d_fake"], False)
+        L_real = Loss.softplus_loss(dict["d_real"], True)
+        L_fake = Loss.softplus_loss(dict["d_fake"], False)
         L_reg = Loss.get_r1_reg(dict["d_real"], dict["w_real"])
         L_D = L_real + L_fake + L_reg
         

@@ -1,11 +1,12 @@
+# True False
 # model 
 model_id: encoder4editing
 
 # multi-GPUs
-use_mGPU: False
+use_mGPU: True
 
 # wandb
-use_wandb: False
+use_wandb: True
 wandb_alert_thres: 1000
 
 # dataset
@@ -16,21 +17,23 @@ train_dataset_root_list: [
 valid_dataset_root: assets/valid
 
 # learning rate
-lr_G: 0.0001
+lr_G: 0.00001
 lr_D: 0.00001
 beta1: 0
 beta2: 0.999
 
 # weight of loss
 W_adv: 1
-W_id: 0.5
-W_recon: 1
-W_lpips: 1
+W_id: 5
+W_recon: 5
+W_lpips: 5
 
 # hyperparameters
 batch_per_gpu: 8
 max_step: 400000
 stylegan_size: 512
+progressive_start: 5000
+progressive_step_cycle: 3000
 
 # log cycle
 loss_cycle: 10
@@ -38,7 +41,8 @@ test_cycle: 1000
 ckpt_cycle: 10000
 
 # ckpt path
-ckpt_path: None
+G_ckpt_path: None
+D_ckpt_path: None
 
 ## Pretrained models paths
 arcface_path: ptnn/arcface.pth

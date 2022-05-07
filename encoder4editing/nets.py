@@ -20,16 +20,6 @@ def weight_init(m):
     if isinstance(m, nn.ConvTranspose2d):
         nn.init.xavier_normal_(m.weight.data)
 
-class Flatten(nn.Module):
-    def forward(self, input):
-        return input.view(input.size(0), -1)
-
-
-def l2_norm(input, axis=1):
-    norm = torch.norm(input, 2, axis, True)
-    output = torch.div(input, norm)
-    return output
-
 
 class Bottleneck(namedtuple('Block', ['in_channel', 'depth', 'stride'])):
     """ A named tuple describing a ResNet block. """
@@ -130,28 +120,6 @@ def _upsample_add(x, y):
     return F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True) + y
 
 
-class ProgressiveStage(Enum):
-    WTraining = 0
-    Delta1Training = 1
-    Delta2Training = 2
-    Delta3Training = 3
-    Delta4Training = 4
-    Delta5Training = 5
-    Delta6Training = 6
-    Delta7Training = 7
-    Delta8Training = 8
-    Delta9Training = 9
-    Delta10Training = 10
-    Delta11Training = 11
-    Delta12Training = 12
-    Delta13Training = 13
-    Delta14Training = 14
-    Delta15Training = 15
-    Delta16Training = 16
-    Delta17Training = 17
-    Inference = 18
-
-
 class GradualStyleBlock(nn.Module):
     def __init__(self, in_c, out_c, spatial):
         super(GradualStyleBlock, self).__init__()
@@ -180,16 +148,17 @@ class Encoder4Editing(nn.Module):
     def __init__(self, stylegan_size=512):
         super(Encoder4Editing, self).__init__()
 
-    
         blocks = get_blocks(50)
-        unit_module = bottleneck_IR_SE
-        self.input_layer = nn.Sequential(nn.Conv2d(3, 64, (3, 3), 1, 1, bias=False),
-                                      nn.BatchNorm2d(64),
-                                      nn.PReLU(64))
+        self.input_layer = nn.Sequential(
+            nn.Conv2d(3, 64, (3, 3), 1, 1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.PReLU(64)
+            )
+            
         modules = []
         for block in blocks:
             for bottleneck in block:
-                modules.append(unit_module(bottleneck.in_channel,
+                modules.append(bottleneck_IR_SE(bottleneck.in_channel,
                                            bottleneck.depth,
                                            bottleneck.stride))
         self.body = nn.Sequential(*modules)
@@ -212,16 +181,8 @@ class Encoder4Editing(nn.Module):
         self.latlayer1 = nn.Conv2d(256, 512, kernel_size=1, stride=1, padding=0)
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
 
-        self.progressive_stage = ProgressiveStage.Inference
-
-    def get_deltas_starting_dimensions(self):
-        ''' Get a list of the initial dimension of every delta from which it is applied '''
-        return list(range(self.style_count))  # Each dimension has a delta applied to it
-
-    def set_progressive_stage(self, new_stage: ProgressiveStage):
-        self.progressive_stage = new_stage
-        print('Changed progressive stage to: ', new_stage)
-
+        self.progressive_stage = 18
+        
     def forward(self, x):
         x = self.input_layer(x)
 
@@ -238,9 +199,8 @@ class Encoder4Editing(nn.Module):
         # Infer main W and duplicate it
         w0 = self.styles[0](c3)
         w = w0.repeat(self.style_count, 1, 1).permute(1, 0, 2)
-        stage = self.progressive_stage.value
         features = c3
-        for i in range(1, min(stage + 1, self.style_count)):  # Infer additional deltas
+        for i in range(1, min(self.progressive_stage + 1, self.style_count)):  # Infer additional deltas
             if i == self.coarse_ind:
                 p2 = _upsample_add(c3, self.latlayer1(c2))  # FPN's middle features
                 features = p2
@@ -259,6 +219,7 @@ class Encoder4EditingGenerator(nn.Module):
         self.batch_per_gpu = batch_per_gpu 
 
         self.Encoder = Encoder4Editing(stylegan_size=stylegan_size)
+        self.progressive_stage = 0
 
         # Face Generator: stylegan
         with dnnlib.util.open_url(stylegan_path) as f:
@@ -291,5 +252,5 @@ class Encoder4EditingGenerator(nn.Module):
         return self.StyleGAN.mapping(random_z, None, truncation_psi=0.7)
 
     def get_id(self, I):
-        return self.arcface(F.interpolate(I[:, :, 19:237, 19:237], [112, 112], mode='bilinear', align_corners=True))
+        return self.arcface(F.interpolate(I[:, :, 16:240, 16:240], [112, 112], mode='bilinear', align_corners=True))
 

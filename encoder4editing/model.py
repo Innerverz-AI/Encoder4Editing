@@ -1,3 +1,4 @@
+import math
 import torch
 from lib import utils
 from lib.model_interface import ModelInterface
@@ -8,13 +9,36 @@ from submodel.discriminator import LatentCodesDiscriminator # with BCE
 
 class Encoder4Editing(ModelInterface):
     def initialize_models(self):
+        self.setup_progressive_steps()
         self.G = Encoder4EditingGenerator(arcface_path=self.args.arcface_path, batch_per_gpu=self.args.batch_per_gpu, stylegan_path=self.args.stylegan_path, stylegan_size=self.args.stylegan_size).cuda(self.gpu).train()
         self.D = LatentCodesDiscriminator().cuda(self.gpu).train()
+
+    def setup_progressive_steps(self):
+        log_size = int(math.log(self.args.stylegan_size, 2))
+        num_style_layers = 2*log_size - 2
+        num_deltas = num_style_layers - 1
+
+        self.progressive_steps = [0]
+        next_progressive_step = self.args.progressive_start
+        for i in range(num_deltas):
+            self.progressive_steps.append(next_progressive_step)
+            next_progressive_step += self.args.progressive_step_cycle
+
+    def update_progressive_stage(self, step):
+        if step in self.progressive_steps:
+            progressive_stage = self.progressive_steps.index(step)
+            self.G.Encoder.progressive_stage = progressive_stage
+            print(f"==============================================================")
+            print(f">>> progressive_stage is converted to stage {progressive_stage}")
+            print(f"==============================================================")
 
     def set_loss_collector(self):
         self._loss_collector = Encoder4EditingLoss(self.args)
 
-    def train_step(self, global_step):
+    def train_step(self, step):
+        
+        self.update_progressive_stage(step)
+        
         # load batch
         I_source = self.load_next_batch()
 
